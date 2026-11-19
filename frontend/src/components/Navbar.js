@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { Hexagon, LogOut } from 'lucide-react';
 
+// Render navigation links and authenticated user controls.
 export default function Navbar() {
   const { user, logout } = useAuth();
 

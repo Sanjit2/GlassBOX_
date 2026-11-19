@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+// Render the group-creation modal and submit its fields.
 export default function CreateGroupModal({ onClose, onCreated }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -9,20 +10,24 @@ export default function CreateGroupModal({ onClose, onCreated }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Add a new profile field to the group form state.
   function addField() {
     setFields([...fields, { field_name: '', field_type: 'text', required: true, field_order: fields.length }]);
   }
 
+  // Update one profile field in the group form state.
   function updateField(index, key, value) {
     const updated = [...fields];
     updated[index] = { ...updated[index], [key]: value };
     setFields(updated);
   }
 
+  // Remove a profile field from the group form state.
   function removeField(index) {
     setFields(fields.filter((_, i) => i !== index));
   }
 
+  // Validate form input and submit the associated request.
   async function handleSubmit(e) {
     e.preventDefault();
     if (!name.trim()) { setError('Workspace name is required'); return; }

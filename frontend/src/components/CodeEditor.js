@@ -25,12 +25,14 @@ print(two_sum([3, 2, 4], 6))        # Expected: [1, 2]
 print(two_sum([3, 3], 6))           # Expected: [0, 1]
 `;
 
+// Render the code editor and synchronize its line numbers.
 export default function CodeEditor() {
   const [code, setCode] = useState(INITIAL_CODE);
   const textareaRef = useRef(null);
 
   const lineCount = code.split("\n").length;
 
+  // Synchronize line-number scrolling with the editor.
   const handleScroll = useCallback(() => {
     const textarea = textareaRef.current;
     const lineNumbers = document.getElementById("eval-line-nums");

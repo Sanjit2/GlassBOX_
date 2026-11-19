@@ -9,6 +9,7 @@ export const metadata = {
   keywords: 'groups, teams, collaboration, management',
 };
 
+// Render the application-wide HTML shell and metadata.
 export default function RootLayout({ children }) {
   return (
     <html lang="en" data-scroll-behavior="smooth">

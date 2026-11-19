@@ -8,6 +8,7 @@ import TutorChat from "@/components/TutorChat";
 const GROUP_ID = "test_group_01";
 const CANDIDATE_NAME = "Sarang";
 
+// Render the candidate evaluation workspace.
 export default function EvaluatePage() {
   return (
     <main className="eval-room" id="evaluation-room">

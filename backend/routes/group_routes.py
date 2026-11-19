@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/groups", tags=["Groups"])
 
 
+# Build a group response including its fields and members.
 def _build_group_response(group: Group, db: Session) -> GroupResponse:
     member_count = db.query(Membership).filter(Membership.group_id == group.id).count()
     fields = db.query(GroupField).filter(GroupField.group_id == group.id).order_by(GroupField.field_order).all()
@@ -30,6 +31,7 @@ def _build_group_response(group: Group, db: Session) -> GroupResponse:
     )
 
 
+# Build a member response with profile values and permissions.
 def _build_member_response(membership: Membership, db: Session, is_admin_viewing: bool = False) -> MemberResponse:
     user = db.query(User).filter(User.id == membership.user_id).first()
     profile = []
@@ -54,6 +56,7 @@ def _build_member_response(membership: Membership, db: Session, is_admin_viewing
 
 
 @router.post("", response_model=GroupResponse, status_code=status.HTTP_201_CREATED)
+# Create a group for the authenticated user and return its details.
 def create_group(data: GroupCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Create a new group with validation"""
     try:
@@ -121,6 +124,7 @@ def create_group(data: GroupCreate, current_user: User = Depends(get_current_use
 
 
 @router.get("", response_model=list[GroupResponse])
+# List groups that the authenticated user belongs to.
 def list_my_groups(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     memberships = db.query(Membership).filter(Membership.user_id == current_user.id).all()
     group_ids = [m.group_id for m in memberships]
@@ -131,6 +135,7 @@ def list_my_groups(current_user: User = Depends(get_current_user), db: Session =
 
 
 @router.post("/join", response_model=GroupResponse)
+# Join a group by code and save the supplied profile values.
 def join_group(data: GroupJoin, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     code = data.group_code.strip().upper()
     group = db.query(Group).filter(Group.group_code == code).first()
@@ -170,6 +175,7 @@ def join_group(data: GroupJoin, current_user: User = Depends(get_current_user), 
 
 
 @router.get("/lookup/{code}", response_model=GroupResponse)
+# Find a group by code for a prospective member.
 def lookup_group_by_code(code: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Look up a group by code before joining (to see required fields)."""
     group = db.query(Group).filter(Group.group_code == code.strip().upper()).first()
@@ -179,6 +185,7 @@ def lookup_group_by_code(code: str, current_user: User = Depends(get_current_use
 
 
 @router.get("/{group_id}", response_model=GroupDetailResponse)
+# Return group details after checking membership.
 def get_group(group_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     group = db.query(Group).filter(Group.id == group_id).first()
     if not group:
@@ -199,6 +206,7 @@ def get_group(group_id: int, current_user: User = Depends(get_current_user), db:
 
 
 @router.delete("/{group_id}", status_code=status.HTTP_204_NO_CONTENT)
+# Delete a group after verifying administrator access.
 def delete_group(group_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     group = db.query(Group).filter(Group.id == group_id).first()
     if not group:
@@ -211,6 +219,7 @@ def delete_group(group_id: int, current_user: User = Depends(get_current_user), 
 
 
 @router.put("/{group_id}", response_model=GroupResponse)
+# Update group metadata and return the revised group.
 def update_group(group_id: int, data: GroupCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Update group name and description (admin only)"""
     try:
@@ -248,6 +257,7 @@ def update_group(group_id: int, data: GroupCreate, current_user: User = Depends(
 
 
 @router.post("/{group_id}/leave", status_code=200)
+# Remove the authenticated user from a group.
 def leave_group(group_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     group = db.query(Group).filter(Group.id == group_id).first()
     if not group:
@@ -266,6 +276,7 @@ def leave_group(group_id: int, current_user: User = Depends(get_current_user), d
 
 # ─── Add fields to existing group ───
 @router.post("/{group_id}/fields", response_model=GroupFieldResponse, status_code=201)
+# Add a profile field to a group and return it.
 def add_field(group_id: int, data: GroupFieldCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     group = db.query(Group).filter(Group.id == group_id).first()
     if not group or group.admin_id != current_user.id:

@@ -6,6 +6,7 @@ import random
 from database import Base
 
 
+# Generate a random uppercase code for a group.
 def generate_group_code(length=8):
     chars = string.ascii_uppercase + string.digits
     return ''.join(random.choices(chars, k=length))

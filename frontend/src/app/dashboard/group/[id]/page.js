@@ -23,6 +23,7 @@ const LANG_OPTIONS = [
   ['markdown', 'Markdown'], ['text', 'Plain Text'], ['csv', 'CSV File'],
 ];
 
+// Return language choices for a selected file category.
 function getLangOptionsForCategory(category) {
   switch (category) {
     case 'frontend':
@@ -37,8 +38,11 @@ function getLangOptionsForCategory(category) {
       return LANG_OPTIONS;
   }
 }
+// Return the display icon associated with a file language.
 function getFileIcon(lang) { return FILE_ICONS[lang?.toLowerCase()] || '📄'; }
+// Return the final filename component of a path.
 function getBasename(path) { return path.split('/').pop(); }
+// Return the parent directory component of a path.
 function getDirname(path) { const parts = path.split('/'); parts.pop(); return parts.join('/'); }
 
 // ─── Build folder tree from flat file list ───
@@ -68,6 +72,7 @@ function AddFileModal({ onClose, onCreated, groupId, isAdmin }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Validate form input and submit the associated request.
   async function handleSubmit(e) {
     e.preventDefault();
     if (!filename.trim()) { setError('Filename is required'); return; }
@@ -143,6 +148,7 @@ function AddFileModal({ onClose, onCreated, groupId, isAdmin }) {
 
 // ─── AI Mode Constants ───
 const N8N_WEBHOOK_BASE = 'http://localhost:5678/webhook/ai-path';
+// Build the n8n webhook URL for a group.
 function getN8nWebhookUrl(groupId) {
   return `${N8N_WEBHOOK_BASE}`;
 }
@@ -184,6 +190,7 @@ function AiModeModal({ onClose, onFilesGenerated, groupId, groupCode }) {
   const [generatedFiles, setGeneratedFiles] = useState([]);
   const [step, setStep] = useState('form'); // 'form' | 'generating' | 'creating' | 'done'
 
+  // Submit the AI generation request and process returned files.
   async function handleGenerate(e) {
     e.preventDefault();
     if (!description.trim()) { setError('Please describe your codebase'); return; }
@@ -493,6 +500,7 @@ export default function GroupDetailPage({ params }) {
     if (user && id) { loadData(); }
   }, [user, authLoading, id]);
 
+  // Load group details and files, then initialize the editor state.
   async function loadData() {
     try {
       const [groupData, filesData] = await Promise.all([
@@ -519,6 +527,7 @@ export default function GroupDetailPage({ params }) {
   const canEdit = (isAdmin && viewMode === 'template') || (!isAdmin && !isDbFile && !selectedFile?.is_readonly && !selectedFile?.is_hidden);
   const visibleFiles = files.filter(f => !f.is_hidden);
 
+  // Toggle a folder?s collapsed state in the file tree.
   function toggleFolder(path) {
     setCollapsedFolders(prev => {
       const next = new Set(prev);
@@ -527,6 +536,7 @@ export default function GroupDetailPage({ params }) {
     });
   }
 
+  // Open a file in the editor and load its content.
   function openFile(file, groupOverride) {
     const g = groupOverride || group;
     setSelectedFileId(file.id);
@@ -550,6 +560,7 @@ export default function GroupDetailPage({ params }) {
     }
   }
 
+  // Close an editor tab and select a remaining tab if needed.
   function closeTab(fileId, e) {
     if (e) e.stopPropagation();
     setOpenTabs(prev => {
@@ -567,6 +578,7 @@ export default function GroupDetailPage({ params }) {
     });
   }
 
+  // Select a member and load their evaluation data.
   async function selectMember(member) {
     setSelectedMemberId(member.id);
     setViewMode('client_overview');
@@ -587,6 +599,7 @@ export default function GroupDetailPage({ params }) {
     }
   }
 
+  // Open a member?s file version in the editor.
   async function openMemberFile(member, file) {
     setSelectedMemberId(member.id);
     setSelectedFileId(file.id);
@@ -607,6 +620,7 @@ export default function GroupDetailPage({ params }) {
     }
   }
 
+  // Switch the editor back to the group template view.
   function switchToTemplate() {
     setViewMode('template');
     setSelectedMemberId(null);
@@ -615,6 +629,7 @@ export default function GroupDetailPage({ params }) {
     if (file) setEditorContent(file.content);
   }
 
+  // Save edited file content and update the editor state.
   const handleEditorChange = useCallback((newContent) => {
     setEditorContent(newContent);
     setSaveStatus('unsaved');
@@ -633,12 +648,14 @@ export default function GroupDetailPage({ params }) {
     }, 1000);
   }, [groupId, selectedFileId, isAdmin, viewMode]);
 
+  // Keep the editor line numbers aligned with scrolling.
   function handleEditorScroll() {
     if (lineNumbersRef.current && editorRef.current) {
       lineNumbersRef.current.scrollTop = editorRef.current.scrollTop;
     }
   }
 
+  // Submit the chat form when Enter is pressed without Shift.
   function handleKeyDown(e) {
     if (e.key === 'Tab') {
       e.preventDefault();
@@ -667,6 +684,7 @@ export default function GroupDetailPage({ params }) {
     }
   }
 
+  // Delete a selected file and remove it from local state.
   async function deleteFile(fileId) {
     if (!confirm('Delete this file? All member versions will be lost.')) return;
     try {
@@ -676,18 +694,21 @@ export default function GroupDetailPage({ params }) {
     } catch (err) { alert(err.message); }
   }
 
+  // Add a newly created file to the current file list.
   function handleFileCreated(file) {
     setFiles(prev => [...prev, file]);
     setShowAddFile(false);
     openFile(file);
   }
 
+  // Copy the selected file code to the clipboard.
   async function copyCode() {
     try { await navigator.clipboard.writeText(group.group_code); } catch { }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
+  // Copy a formatted listing of the group file tree.
   async function copyFileTree() {
     let text = `${group.name} Workspace:\n\n`;
     const sorted = [...files].sort((a, b) => a.filename.localeCompare(b.filename));
@@ -701,6 +722,7 @@ export default function GroupDetailPage({ params }) {
     } catch (e) { }
   }
 
+  // Run the group tests and display the execution result.
   async function runTests() {
     if (testRunning) return;
     setTestRunning(true);

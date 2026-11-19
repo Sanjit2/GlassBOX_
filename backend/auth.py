@@ -17,6 +17,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
+# Validate password length and complexity, returning a success flag and message.
 def validate_password(password: str) -> tuple[bool, str]:
     """Validate password strength. Returns (is_valid, error_message)"""
     if len(password) < MIN_PASSWORD_LENGTH:
@@ -43,16 +44,19 @@ def validate_password(password: str) -> tuple[bool, str]:
     return True, ""
 
 
+# Hash a plaintext password for secure storage.
 def hash_password(password: str) -> str:
     """Hash password using bcrypt"""
     return pwd_context.hash(password)
 
 
+# Compare a plaintext password with its stored hash.
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify password against hash"""
     return pwd_context.verify(plain_password, hashed_password)
 
 
+# Create a signed JWT containing user data and an optional expiration.
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """Create JWT access token with proper expiration"""
     to_encode = data.copy()
@@ -66,6 +70,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 
+# Decode the bearer token and load the authenticated user from the database.
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     """Get authenticated user from token"""
     credentials_exception = HTTPException(

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import Navbar from '@/components/Navbar';
 
+// Render the login form and submit credentials.
 export default function LoginPage() {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Validate form input and submit the associated request.
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');

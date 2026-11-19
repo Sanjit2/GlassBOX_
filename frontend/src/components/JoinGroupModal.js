@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import api from '@/lib/api';
 
+// Render the group-joining flow and collect profile values.
 export default function JoinGroupModal({ onClose, onJoined }) {
   const [step, setStep] = useState('code'); // 'code' or 'fields'
   const [code, setCode] = useState('');
@@ -11,6 +12,7 @@ export default function JoinGroupModal({ onClose, onJoined }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Look up a group code and advance the join flow.
   async function handleLookup(e) {
     e.preventDefault();
     if (!code.trim()) { setError('Enter a workspace code'); return; }
@@ -33,6 +35,7 @@ export default function JoinGroupModal({ onClose, onJoined }) {
     }
   }
 
+  // Join the selected group with collected profile values.
   async function doJoin(values) {
     setLoading(true);
     setError('');
@@ -46,6 +49,7 @@ export default function JoinGroupModal({ onClose, onJoined }) {
     }
   }
 
+  // Validate profile fields and submit the group join request.
   async function handleJoinWithFields(e) {
     e.preventDefault();
     // Validate required fields

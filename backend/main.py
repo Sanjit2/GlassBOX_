@@ -52,6 +52,7 @@ app.include_router(execution_router)
 
 
 @app.get("/")
+# Return the API welcome message.
 def root():
     return {
         "message": "GroupHub API v2 is running",
@@ -61,12 +62,14 @@ def root():
 
 
 @app.get("/health")
+# Return a health status response for monitoring.
 def health_check():
     """Health check endpoint"""
     return {"status": "ok"}
 
 
 @app.exception_handler(Exception)
+# Log unhandled exceptions and return a safe server-error response.
 async def global_exception_handler(request, exc):
     """Global exception handler for security"""
     logger.error(f"Unhandled exception: {str(exc)}")

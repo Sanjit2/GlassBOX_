@@ -11,6 +11,7 @@ const INITIAL_MESSAGES = [
   },
 ];
 
+// Render the tutor chat and exchange messages with the chat API.
 export default function TutorChat({ groupId, candidateName }) {
   const storageKey = `chat_session_${groupId}_${candidateName.toLowerCase().replace(/[^a-z0-9_]/g, '')}`;
 
@@ -33,6 +34,7 @@ export default function TutorChat({ groupId, candidateName }) {
   // On mount: check if the server session was reset (turn_count === 0).
   // If so, wipe stale localStorage so the UI matches the backend.
   useEffect(() => {
+    // Check server session state and clear stale local chat messages.
     async function syncWithServer() {
       try {
         const res = await fetch(
@@ -117,6 +119,7 @@ export default function TutorChat({ groupId, candidateName }) {
     }
   };
 
+  // Validate form input and submit the associated request.
   const handleSubmit = async (e) => {
     e.preventDefault();
     const trimmed = input.trim();

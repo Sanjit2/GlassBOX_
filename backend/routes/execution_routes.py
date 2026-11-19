@@ -40,6 +40,7 @@ CONTAINER_CPUS = "1"
 
 # ─── Helpers ───
 
+# Verify that a user belongs to the requested group.
 def _check_membership(user: User, group_id: int, db: Session):
     """Verify the user is a member of this group."""
     group = db.query(Group).filter(Group.id == group_id).first()
@@ -57,6 +58,7 @@ def _check_membership(user: User, group_id: int, db: Session):
     return group, membership
 
 
+# Collect the group files visible to a user for execution.
 def _get_user_workspace(user: User, group: Group, db: Session) -> list[dict]:
     """
     Build the user's complete workspace for execution.
@@ -121,6 +123,7 @@ def _get_user_workspace(user: User, group: Group, db: Session) -> list[dict]:
     return workspace
 
 
+# Remove unsafe characters from a workspace path component.
 def _sanitize_path_component(component: str) -> str:
     """Strip characters that are invalid in Windows file/directory names."""
     # Windows invalid chars: < > : " | ? * and control chars
@@ -129,6 +132,7 @@ def _sanitize_path_component(component: str) -> str:
     return sanitized.strip('. ')  # strip leading/trailing dots and spaces (also invalid on Windows)
 
 
+# Write workspace files to the temporary execution directory.
 def _write_workspace_to_disk(workspace: list[dict], base_dir: str):
     """Write virtual files to real filesystem for Docker mounting."""
     for item in workspace:
@@ -153,6 +157,7 @@ def _write_workspace_to_disk(workspace: list[dict], base_dir: str):
             f.write(item["content"])
 
 
+# Run the workspace tests in an isolated Docker container.
 def _run_in_docker(workspace_dir: str) -> dict:
     """
     Spin up an isolated Docker container, run the test suites, capture output.
@@ -436,6 +441,7 @@ echo "════════════════════════�
 # ─── Main Endpoint ───
 
 @router.post("/execute")
+# Authorize a group, prepare its workspace, and return test results.
 def execute_tests(
     group_id: int,
     current_user: User = Depends(get_current_user),

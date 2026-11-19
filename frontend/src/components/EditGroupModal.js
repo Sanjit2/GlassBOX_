@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+// Render the group-editing modal and save metadata changes.
 export default function EditGroupModal({ group, onClose, onUpdated }) {
   const [name, setName] = useState(group.name);
   const [description, setDescription] = useState(group.description || '');
@@ -9,6 +10,7 @@ export default function EditGroupModal({ group, onClose, onUpdated }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Validate form input and submit the associated request.
   async function handleSubmit(e) {
     e.preventDefault();
     if (!name.trim()) {

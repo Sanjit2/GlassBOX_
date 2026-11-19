@@ -6,6 +6,7 @@ import api from './api';
 
 const AuthContext = createContext(null);
 
+// Provide authentication state and actions through React context.
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -21,6 +22,7 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  // Load the saved token, fetch the current user, and update auth state.
   async function checkAuth() {
     try {
       const token = localStorage.getItem('grouphub_token');
@@ -44,6 +46,7 @@ export function AuthProvider({ children }) {
     }
   }
 
+  // Authenticate with the API, store the token, update the user, and redirect to the dashboard.
   async function login(email, password) {
     setError(null);
     try {
@@ -89,6 +92,7 @@ export function AuthProvider({ children }) {
     }
   }
 
+  // Create an account through the API, store the token, update the user, and redirect to the dashboard.
   async function register(username, email, password) {
     setError(null);
     try {
@@ -142,6 +146,7 @@ export function AuthProvider({ children }) {
     }
   }
 
+  // Clear the saved token and reset the authenticated user state.
   function logout() {
     localStorage.removeItem('grouphub_token');
     setUser(null);
@@ -167,6 +172,7 @@ export function AuthProvider({ children }) {
   );
 }
 
+// Return the authentication context for the calling component.
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {

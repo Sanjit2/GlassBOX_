@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 
+# Normalize a username and enforce its allowed length and characters.
 def sanitize_username(username: str) -> str:
     """Sanitize and validate username"""
     username = username.strip()
@@ -35,6 +36,7 @@ def sanitize_username(username: str) -> str:
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+# Validate registration data, create the user, and return an access token.
 def register(data: UserRegister, db: Session = Depends(get_db)):
     """Register a new user with strong password validation"""
     try:
@@ -105,6 +107,7 @@ def register(data: UserRegister, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
+# Authenticate credentials and return an access token with user details.
 def login(data: UserLogin, db: Session = Depends(get_db)):
     """Login user with secure password verification"""
     try:
@@ -137,6 +140,7 @@ def login(data: UserLogin, db: Session = Depends(get_db)):
 
 
 @router.get("/me", response_model=UserResponse)
+# Return the currently authenticated user profile.
 def get_me(current_user: User = Depends(get_current_user)):
     """Get current authenticated user"""
     return UserResponse.model_validate(current_user)

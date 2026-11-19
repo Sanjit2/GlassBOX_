@@ -7,6 +7,7 @@
 
 import { NextResponse } from "next/server";
 
+// Fetch candidate score data from the n8n workflow.
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);

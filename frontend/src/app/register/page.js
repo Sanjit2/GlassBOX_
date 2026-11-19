@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import Navbar from '@/components/Navbar';
 
+// Render the registration form and create an account.
 export default function RegisterPage() {
   const { register } = useAuth();
   const [username, setUsername] = useState('');
@@ -14,6 +15,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Validate form input and submit the associated request.
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');

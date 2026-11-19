@@ -7,6 +7,7 @@ if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' &&
 }
 
 class ApiClient {
+  // Initialize the API client with the configured base URL.
   constructor() {
     this.baseUrl = defaultApiUrl;
   }
@@ -118,6 +119,7 @@ class ApiClient {
 
   // ─── Auth Endpoints ───
 
+  // Create an account through the API, store the token, and update auth state.
   async register(username, email, password) {
     username = this._validateInput(username, 'Username', 50);
     email = this._validateInput(email, 'Email', 100);
@@ -129,6 +131,7 @@ class ApiClient {
     });
   }
 
+  // Authenticate with the API, store the token, and update the current user.
   async login(email, password) {
     email = this._validateInput(email, 'Email', 100);
     password = this._validateInput(password, 'Password', 128);
@@ -139,12 +142,14 @@ class ApiClient {
     });
   }
 
+  // Fetch the authenticated user profile from the API.
   async getMe() {
     return this.request('/auth/me');
   }
 
   // ─── Groups Endpoints ───
 
+  // Validate group data and send a group-creation request.
   async createGroup(name, description = '', fields = []) {
     name = this._validateInput(name, 'Group name', 100);
     description = this._validateInput(description, 'Description', 500);
@@ -159,10 +164,12 @@ class ApiClient {
     });
   }
 
+  // Fetch the groups available to the authenticated user.
   async getGroups() {
     return this.request('/groups');
   }
 
+  // Validate a group code and submit membership profile values.
   async joinGroup(groupCode, profileValues = []) {
     groupCode = this._validateInput(groupCode, 'Group code', 20);
     
@@ -176,11 +183,13 @@ class ApiClient {
     });
   }
 
+  // Fetch group details by its code.
   async lookupGroup(code) {
     code = this._validateInput(code, 'Group code', 20);
     return this.request(`/groups/lookup/${encodeURIComponent(code)}`);
   }
 
+  // Fetch one group by its positive numeric ID.
   async getGroup(id) {
     if (!Number.isInteger(id) || id <= 0) {
       throw new Error('Invalid group ID');
@@ -188,6 +197,7 @@ class ApiClient {
     return this.request(`/groups/${id}`);
   }
 
+  // Delete a group by its positive numeric ID.
   async deleteGroup(id) {
     if (!Number.isInteger(id) || id <= 0) {
       throw new Error('Invalid group ID');
@@ -195,6 +205,7 @@ class ApiClient {
     return this.request(`/groups/${id}`, { method: 'DELETE' });
   }
 
+  // Submit a request for the current user to leave a group.
   async leaveGroup(id) {
     if (!Number.isInteger(id) || id <= 0) {
       throw new Error('Invalid group ID');
@@ -204,6 +215,7 @@ class ApiClient {
 
   // ─── Files Endpoints ───
 
+  // Validate file data and create a file in a group.
   async createFile(groupId, filename, language = 'text', content = '', isHidden = false, isReadonly = false) {
     if (!Number.isInteger(groupId) || groupId <= 0) {
       throw new Error('Invalid group ID');
@@ -221,6 +233,7 @@ class ApiClient {
     });
   }
 
+  // Fetch all files for a group.
   async getFiles(groupId) {
     if (!Number.isInteger(groupId) || groupId <= 0) {
       throw new Error('Invalid group ID');
@@ -228,6 +241,7 @@ class ApiClient {
     return this.request(`/groups/${groupId}/files`);
   }
 
+  // Fetch one file by group and file IDs.
   async getFile(groupId, fileId) {
     if (!Number.isInteger(groupId) || groupId <= 0) {
       throw new Error('Invalid group ID');
@@ -238,6 +252,7 @@ class ApiClient {
     return this.request(`/groups/${groupId}/files/${fileId}`);
   }
 
+  // Update a group file with the supplied data.
   async updateFile(groupId, fileId, data) {
     if (!Number.isInteger(groupId) || groupId <= 0) {
       throw new Error('Invalid group ID');
@@ -252,6 +267,7 @@ class ApiClient {
     });
   }
 
+  // Delete a selected file and remove it from local state.
   async deleteFile(groupId, fileId) {
     if (!Number.isInteger(groupId) || groupId <= 0) {
       throw new Error('Invalid group ID');
@@ -264,6 +280,7 @@ class ApiClient {
 
   // ─── Member File Versions ───
 
+  // Fetch the current user?s version of a file.
   async getMyVersion(groupId, fileId) {
     if (!Number.isInteger(groupId) || groupId <= 0) {
       throw new Error('Invalid group ID');
@@ -274,6 +291,7 @@ class ApiClient {
     return this.request(`/groups/${groupId}/files/${fileId}/my-version`);
   }
 
+  // Validate and save the current user?s file content.
   async updateMyVersion(groupId, fileId, content) {
     if (!Number.isInteger(groupId) || groupId <= 0) {
       throw new Error('Invalid group ID');
@@ -291,6 +309,7 @@ class ApiClient {
     });
   }
 
+  // Fetch every submitted version of a file.
   async getAllVersions(groupId, fileId) {
     if (!Number.isInteger(groupId) || groupId <= 0) {
       throw new Error('Invalid group ID');
@@ -301,6 +320,7 @@ class ApiClient {
     return this.request(`/groups/${groupId}/files/${fileId}/versions`);
   }
 
+  // Fetch a specific member?s version of a file.
   async getMemberVersion(groupId, fileId, userId) {
     if (!Number.isInteger(groupId) || groupId <= 0) {
       throw new Error('Invalid group ID');
@@ -316,6 +336,7 @@ class ApiClient {
 
   // ─── Code Execution ───
 
+  // Run the group tests and display the execution result.
   async runTests(groupId) {
     if (!Number.isInteger(groupId) || groupId <= 0) {
       throw new Error('Invalid group ID');

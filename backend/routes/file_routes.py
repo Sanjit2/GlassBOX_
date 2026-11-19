@@ -22,11 +22,13 @@ EXT_LANG_MAP = {
     "md": "markdown", "txt": "text", "xml": "xml", "yaml": "yaml", "yml": "yaml",
 }
 
+# Infer a source language from a filename extension.
 def _detect_language(filename: str) -> str:
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
     return EXT_LANG_MAP.get(ext, "text")
 
 
+# Verify that a user belongs to the requested group.
 def _check_membership(user: User, group_id: int, db: Session):
     """Verify user is a member of the group. Returns (group, membership)."""
     group = db.query(Group).filter(Group.id == group_id).first()
@@ -40,6 +42,7 @@ def _check_membership(user: User, group_id: int, db: Session):
     return group, membership
 
 
+# Ensure the user is the administrator of the group.
 def _check_admin(user: User, group: Group):
     if group.admin_id != user.id:
         raise HTTPException(status_code=403, detail="Only the admin can do this")
@@ -48,6 +51,7 @@ def _check_admin(user: User, group: Group):
 # ─── Bulk AI Import (called by N8N — no auth required) ───
 
 @router.post("/ai-import", status_code=201)
+# Import AI-generated files into a group after validating the request.
 def ai_bulk_import(group_id: int, data: AiBulkImport, db: Session = Depends(get_db)):
     """
     Bulk-create files from N8N AI generation.
@@ -122,6 +126,7 @@ def ai_bulk_import(group_id: int, data: AiBulkImport, db: Session = Depends(get_
 # ─── File CRUD (Admin) ───
 
 @router.post("", response_model=FileResponse, status_code=201)
+# Create a group file and return its serialized representation.
 def create_file(group_id: int, data: FileCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Create a file template for group (admin only)"""
     try:
@@ -184,6 +189,7 @@ def create_file(group_id: int, data: FileCreate, current_user: User = Depends(ge
 
 
 @router.get("", response_model=list[FileResponse])
+# List files that the authenticated user can access in a group.
 def list_files(group_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """List files in group. Hidden files only visible to admin."""
     group, _ = _check_membership(current_user, group_id, db)
@@ -203,6 +209,7 @@ def list_files(group_id: int, current_user: User = Depends(get_current_user), db
 
 
 @router.get("/{file_id}", response_model=FileResponse)
+# Fetch one group file after checking membership.
 def get_file(group_id: int, file_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Get file details. Hidden files only visible to admin."""
     group, _ = _check_membership(current_user, group_id, db)
@@ -221,6 +228,7 @@ def get_file(group_id: int, file_id: int, current_user: User = Depends(get_curre
 
 
 @router.put("/{file_id}", response_model=FileResponse)
+# Update group-file metadata or content and return the saved file.
 def update_file(group_id: int, file_id: int, data: FileUpdate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Update a file template (admin only)"""
     try:
@@ -269,6 +277,7 @@ def update_file(group_id: int, file_id: int, data: FileUpdate, current_user: Use
 
 
 @router.delete("/{file_id}", status_code=204)
+# Delete a group file after checking administrative access.
 def delete_file(group_id: int, file_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     group, _ = _check_membership(current_user, group_id, db)
     _check_admin(current_user, group)
@@ -285,6 +294,7 @@ def delete_file(group_id: int, file_id: int, current_user: User = Depends(get_cu
 # ─── Member Versions ───
 
 @router.get("/{file_id}/my-version", response_model=MemberVersionResponse)
+# Return the current user?s version of a group file.
 def get_my_version(group_id: int, file_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Member gets their own copy of the file. Hidden files only for admin."""
     group, _ = _check_membership(current_user, group_id, db)
@@ -325,6 +335,7 @@ def get_my_version(group_id: int, file_id: int, current_user: User = Depends(get
 
 
 @router.put("/{file_id}/my-version", response_model=MemberVersionResponse)
+# Save the current user?s file version and return the result.
 def update_my_version(group_id: int, file_id: int, data: MemberVersionUpdate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Member saves edits to their own copy."""
     try:
@@ -382,6 +393,7 @@ def update_my_version(group_id: int, file_id: int, data: MemberVersionUpdate, cu
 
 
 @router.get("/{file_id}/versions", response_model=list[MemberVersionResponse])
+# List all submitted versions of a group file.
 def get_all_versions(group_id: int, file_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Admin-only: view all members' versions of a file."""
     group, _ = _check_membership(current_user, group_id, db)
@@ -403,6 +415,7 @@ def get_all_versions(group_id: int, file_id: int, current_user: User = Depends(g
 
 
 @router.get("/{file_id}/versions/{user_id}", response_model=MemberVersionResponse)
+# Return one member?s version of a group file.
 def get_member_version(group_id: int, file_id: int, user_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Admin-only: view a specific member's version."""
     group, _ = _check_membership(current_user, group_id, db)

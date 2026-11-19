@@ -8,6 +8,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
+# Open a database session and close it after the request completes.
 def get_db():
     db = SessionLocal()
     try:

@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
+// Render the public landing page.
 export default function HomePage() {
   const { user, loading } = useAuth();
   const router = useRouter();

@@ -6,6 +6,7 @@
 
 import { NextResponse } from "next/server";
 
+// Forward the session initialization request to the n8n workflow.
 export async function POST(request) {
   try {
     const body = await request.json();

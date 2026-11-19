@@ -10,6 +10,7 @@ import CreateGroupModal from '@/components/CreateGroupModal';
 import JoinGroupModal from '@/components/JoinGroupModal';
 import EditGroupModal from '@/components/EditGroupModal';
 
+// Render the group dashboard and its group-management controls.
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -31,6 +32,7 @@ export default function DashboardPage() {
     }
   }, [user, authLoading, router]);
 
+  // Fetch the user?s groups and update dashboard state.
   async function loadGroups() {
     try {
       const data = await api.getGroups();
@@ -42,22 +44,26 @@ export default function DashboardPage() {
     }
   }
 
+  // Add a newly created group to the dashboard list.
   function handleGroupCreated(group) {
     setGroups([group, ...groups]);
     setShowCreate(false);
   }
 
+  // Add a newly joined group to the dashboard list.
   function handleGroupJoined(group) {
     setGroups([group, ...groups]);
     setShowJoin(false);
   }
 
+  // Replace an updated group in the dashboard list.
   function handleGroupUpdated(updatedGroup) {
     setGroups(groups.map(g => g.id === updatedGroup.id ? updatedGroup : g));
     setShowEdit(false);
     setEditingGroup(null);
   }
 
+  // Delete a group after confirmation and refresh local state.
   async function handleDeleteGroup(groupId) {
     if (!confirm('Are you sure you want to delete this group? This action cannot be undone.')) {
       return;
@@ -70,6 +76,7 @@ export default function DashboardPage() {
     }
   }
 
+  // Copy a group code and show its copied status.
   function copyToClipboard(text, groupId) {
     navigator.clipboard.writeText(text);
     setCopiedCode(groupId);
