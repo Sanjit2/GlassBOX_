@@ -8,6 +8,7 @@ A secure, modern platform for teams to collaborate on coding challenges, tests, 
 - ✅ Create workspaces/groups with custom member profiles
 - ✅ Define custom fields for member information collection
 - ✅ Create and manage file templates
+- ✅ Generate coding challenges, bugged code, and tests with the n8n AI code-generation workflow
 - ✅ View all member submissions and progress
 - ✅ Admin dashboard with group analytics
 
@@ -15,6 +16,7 @@ A secure, modern platform for teams to collaborate on coding challenges, tests, 
 - ✅ Join groups with access codes
 - ✅ Complete member profile forms
 - ✅ Work on provided code challenges
+- ✅ Get Socratic AI tutoring and reasoning feedback through n8n
 - ✅ Submit independent file versions
 - ✅ Real-time file editing and tracking
 
@@ -31,34 +33,31 @@ A secure, modern platform for teams to collaborate on coding challenges, tests, 
 
 ## 🏗️ Architecture
 
+```mermaid
+flowchart LR
+    Browser["Browser<br/>Next.js UI"] -->|REST + JWT| FastAPI["FastAPI backend"]
+    FastAPI -->|SQLAlchemy| AppDB[("SQLite or PostgreSQL<br/>users, groups, files, versions")]
+    FastAPI -->|isolated test execution| Runner["Docker test runner"]
+
+    Browser -->|POST /api/chat<br/>GET /api/scores| NextProxy["Next.js server API routes"]
+    NextProxy -->|/webhook/chat<br/>/webhook/scores| N8NEval["n8n workflow<br/>ai_Eval.json<br/>AI tutor + scoring"]
+    Browser -->|POST /webhook/ai-path| N8NGen["n8n workflow<br/>Sanathn8n.json<br/>AI code generation"]
+
+    N8NGen -->|Gemini API| Gemini["Google Gemini"]
+    N8NEval -->|Gemini API| Gemini
+    N8NGen -->|AI file import| FastAPI
+    N8NGen -->|generated codebase| Supabase[("Supabase<br/>codebases")]
+    N8NEval -->|chat history + scores| Supabase2[("Supabase<br/>codebases, sessions, scores")]
+
+    Compose["docker-compose.yml"] -->|starts| N8N["n8n service<br/>localhost:5678"]
+    N8N --> N8NEval
+    N8N --> N8NGen
 ```
-glassBox/
-├── backend/                 # FastAPI server
-│   ├── main.py            # App initialization & middleware
-│   ├── auth.py            # Authentication utilities
-│   ├── config.py          # Configuration & env variables
-│   ├── database.py        # Database connection
-│   ├── models.py          # SQLAlchemy models
-│   ├── schemas.py         # Pydantic validation schemas
-│   ├── requirements.txt    # Python dependencies
-│   └── routes/
-│       ├── auth_routes.py
-│       ├── group_routes.py
-│       └── file_routes.py
-│
-├── frontend/               # Next.js 16 application
-│   ├── src/
-│   │   ├── app/           # App routes & pages
-│   │   ├── components/    # React components
-│   │   └── lib/           # Utilities & API client
-│   ├── package.json       # Node dependencies
-│   └── .env.example       # Environment template
-│
-├── QUICKSTART.md          # Get started in 5 minutes
-├── DEPLOYMENT.md          # Production deployment guide
-├── SECURITY.md            # Security documentation
-└── .env.example           # Backend env template
-```
+
+The n8n services are started by [`docker-compose.yml`](./docker-compose.yml).
+The workflow exports shown above are [`Sanathn8n.json`](./Sanathn8n.json) for
+AI-generated coding challenges and [`ai_Eval.json`](./ai_Eval.json) for tutor
+chat and evaluation.
 
 ## 🚀 Quick Start
 
@@ -71,7 +70,7 @@ python -m venv venv
 source venv/bin/activate  # or venv\Scripts\activate on Windows
 pip install -r requirements.txt
 cp .env.example .env
-uvicorn main:app --reload
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Backend at: http://localhost:8000 (API docs at `/docs`)
@@ -87,6 +86,66 @@ npm run dev
 Frontend at: http://localhost:3000
 
 **See [QUICKSTART.md](./QUICKSTART.md) for detailed setup instructions.**
+
+## 🔄 n8n Workflows
+
+n8n powers the AI code-generation, tutoring, and scoring features. The core
+frontend and backend can run without n8n, but those AI features require it.
+
+The workflow overview below shows how the imported n8n workflows are organized:
+
+![Overview of the GlassBOX n8n workflows](./assets/n8n-workflows.png)
+
+### Start n8n
+
+Install and start Docker Desktop. In the repository root, create a local
+`.env` file containing your Gemini API key:
+
+```env
+GEMINI_KEY=your_gemini_api_key
+```
+
+The root `.env` file is ignored by Git. Start n8n from the repository root:
+
+```powershell
+docker compose up -d n8n
+docker compose logs -f n8n
+```
+
+Open [http://localhost:5678](http://localhost:5678) and finish n8n's initial
+setup.
+
+### Import and activate the workflows
+
+In n8n, use **Import from File** to import each workflow, configure the
+referenced **Supabase account** credential on its Supabase nodes, then activate
+the workflows. Active workflows use the production `/webhook/` URLs below.
+
+| Workflow file | Webhook | Purpose |
+| --- | --- | --- |
+| [Sanathn8n.json](./Sanathn8n.json) | `POST /webhook/ai-path` | Generates a database sample, backend and frontend code, and tests for a group; stores the generated codebase in Supabase. |
+| [ai_Eval.json](./ai_Eval.json) | `POST /webhook/chat` | Provides the AI coding tutor and evaluates debugging prompts, saving session and score data in Supabase. |
+| [ai_Eval.json](./ai_Eval.json) | `GET /webhook/scores` | Returns a member's saved evaluation scores. |
+
+Both workflows call Gemini using `GEMINI_KEY` and use Supabase nodes. Configure
+valid Gemini and Supabase credentials before running them. The `.env` file is
+for local development only; never commit API keys. If a key was previously
+committed or shared, revoke it and use a newly generated key.
+
+### Connect the frontend
+
+Ensure `frontend/.env.local` contains the following URLs (they are also in
+[frontend/.env.example](./frontend/.env.example)):
+
+```env
+NEXT_PUBLIC_N8N_WEBHOOK_URL=http://localhost:5678/webhook/ai-path
+N8N_WEBHOOK_URL=http://localhost:5678/webhook
+```
+
+Restart `npm run dev` after changing environment variables. The current
+workflow exports provide `/ai-path`, `/chat`, and `/scores`; they do **not**
+provide `/init-session`, which the frontend also calls. That feature requires
+an additional n8n endpoint/workflow.
 
 ## 📚 API Documentation
 
@@ -152,7 +211,7 @@ Frontend at: http://localhost:3000
 ### Development
 ```bash
 # Run both servers with auto-reload
-# Backend: uvicorn main:app --reload
+# Backend: uvicorn main:app --reload --host 0.0.0.0 --port 8000
 # Frontend: npm run dev
 ```
 

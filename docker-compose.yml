@@ -10,7 +10,7 @@ services:
       - n8n_data:/home/node/.n8n
     environment:
       - TZ=Asia/Kolkata
-      - GEMINI_KEY=AIzaSyBNcFueLZf0Zbv3XsG177SvyqsF4_gjh_A
+      - GEMINI_KEY=${GEMINI_KEY:?Set GEMINI_KEY in the repository root .env file}
       - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
       - N8N_VARIABLES_ENABLED=true
     extra_hosts:
